@@ -12,15 +12,19 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import java.io.File;
+import java.util.LinkedList;
 
 public class EventActivity extends AppCompatActivity {
     public static final int REQUEST_CAPTURE = 1;
     public static final int REQUEST_RECORD = 100;
 
+    LinkedList<String> stringLinkedList = new LinkedList<String>();
+
 
     Button imageB, videoB;
     EditText eventName;
     private int imageCounter = 0, videoCounter = 0;
+    Intent intent;
 
 
     @Override
@@ -31,9 +35,16 @@ public class EventActivity extends AppCompatActivity {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
 
+        Intent intent= getIntent();
+        String event = intent.getExtras().getString("name");
+
         imageB = findViewById(R.id.take_picture);
         videoB = findViewById(R.id.take_video);
         eventName = findViewById(R.id.editText);
+
+        Log.d("moiyad", "onCreate: "+event);
+
+        eventName.setText(event);
 
 
 
@@ -41,9 +52,10 @@ public class EventActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, filePath(eventName.getText().toString(), false));
                 intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
                 startActivityForResult(intent, REQUEST_RECORD);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, filePath(eventName.getText().toString(), false));
+
 
             }
         });
@@ -53,19 +65,21 @@ public class EventActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                intent.putExtra(MediaStore.EXTRA_OUTPUT, filePath(eventName.getText().toString(), true));
                 startActivityForResult(intent, REQUEST_CAPTURE);
+
             }
         });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        data.putExtra(MediaStore.EXTRA_OUTPUT, filePath(eventName.getText().toString(), true));
 
     }
 
     // True == image , False == video
     public Uri filePath(String event, boolean type) {
+
 
         Uri fileUrl;
         File folder = new File("sdcard/" + event);
