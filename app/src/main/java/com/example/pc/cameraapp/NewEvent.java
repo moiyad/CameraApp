@@ -4,12 +4,15 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -21,8 +24,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,13 +32,16 @@ public class NewEvent extends AppCompatActivity {
 
     EditText eventName;
     Button startEvent;
-    ImageView locationImage;
+    ImageView locationImage,imageTest;
     TextView locationText, tv;
     LinkedList<Event> eventLinkedList = new LinkedList<Event>();
     private LocationManager locationManager;
-    private Location location;
     private LocationListener listener;
+    Event event ;
+    private int REQUEST_CODE = 1;
     int i ;
+    String city;
+
 
 
 
@@ -47,14 +51,43 @@ public class NewEvent extends AppCompatActivity {
         setContentView(R.layout.activity_new_event);
 
          i = 0;
+         city ="null";
         eventName = findViewById(R.id.event_name);
         startEvent = findViewById(R.id.start_event_B);
         locationImage = findViewById(R.id.location_image);
         locationText = findViewById(R.id.location_text);
+        imageTest= findViewById(R.id.imagetest);
         tv = findViewById(R.id.textView2);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        configure_button();
+
+//        startEvent.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (eventName.length() != 0 && !city.equals("null")){
+//                    event = new Event(eventName.getText().toString(),city,"image");
+//                    eventLinkedList.add(event);
+//
+//                    Intent intent = new Intent(NewEvent.this,EventActivity.class);
+//                    startActivity(intent);
+//
+//                }
+//
+//            }
+//        });
+
+        startEvent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+
+                startActivityForResult(Intent.createChooser(intent,"select image "),REQUEST_CODE);
+            }
+        });
+
 
         listener = new LocationListener() {
             @Override
@@ -63,7 +96,6 @@ public class NewEvent extends AppCompatActivity {
                 location_name(location);
                 i++;
                 Log.d("NewEvent", "onLocationChanged: "+i);
-                return;
             }
 
             @Override
@@ -82,6 +114,26 @@ public class NewEvent extends AppCompatActivity {
                 startActivity(i);
             }
         };
+
+
+        configure_button();
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(data != null && data.getData()!= null){
+
+            Uri uri = data.getData();
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(),uri);
+
+            imageTest.setImageBitmap(bitmap);
+            } catch (IOException e) {
+
+                e.printStackTrace();
+            }
+        }
 
     }
 
@@ -110,7 +162,7 @@ public class NewEvent extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 locationManager.requestLocationUpdates("gps", 0, 10000, listener);
-                return;
+
             }
         });
     }
@@ -120,10 +172,9 @@ public class NewEvent extends AppCompatActivity {
             Geocoder geocoder = new Geocoder(NewEvent.this);
             List<Address> addresses = null ;
             addresses = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1 );
-            String counter = addresses.get(0).getCountryName();
-            String city =  addresses.get(0).getLocality();
-            Log.d("newEvent", "location_name: country : "+counter+" city : "+city);
-            locationText.setText("country : "+counter+"\n city : "+city);
+             city =  addresses.get(0).getCountryName()+" - "+addresses.get(0).getLocality();
+            Log.d("newEvent", "location_name: country :  city : "+city);
+            locationText.setText("place: "+city);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -131,7 +182,3 @@ public class NewEvent extends AppCompatActivity {
     }
 }
 
-
-
-
-//

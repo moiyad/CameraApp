@@ -35,18 +35,11 @@ public class EventActivity extends AppCompatActivity {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
 
-        Intent intent= getIntent();
-        String event = intent.getExtras().getString("name");
+
 
         imageB = findViewById(R.id.take_picture);
         videoB = findViewById(R.id.take_video);
         eventName = findViewById(R.id.editText);
-
-        Log.d("moiyad", "onCreate: "+event);
-
-        eventName.setText(event);
-
-
 
 
 
