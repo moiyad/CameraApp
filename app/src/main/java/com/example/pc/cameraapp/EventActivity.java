@@ -48,6 +48,8 @@ public class EventActivity extends AppCompatActivity {
 
 
 
+
+
         videoB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -59,6 +61,7 @@ public class EventActivity extends AppCompatActivity {
 
             }
         });
+
 
 
         imageB.setOnClickListener(new View.OnClickListener() {
