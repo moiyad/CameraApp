@@ -32,7 +32,7 @@ public class NewEvent extends AppCompatActivity {
 
     EditText eventName;
     Button startEvent;
-    ImageView locationImage,imageTest;
+    ImageView locationImage, imageUpload;
     TextView locationText, tv;
     LinkedList<Event> eventLinkedList = new LinkedList<Event>();
     private LocationManager locationManager;
@@ -41,6 +41,7 @@ public class NewEvent extends AppCompatActivity {
     private int REQUEST_CODE = 1;
     int i ;
     String city;
+    Bitmap bitmap;
 
 
 
@@ -56,34 +57,33 @@ public class NewEvent extends AppCompatActivity {
         startEvent = findViewById(R.id.start_event_B);
         locationImage = findViewById(R.id.location_image);
         locationText = findViewById(R.id.location_text);
-        imageTest= findViewById(R.id.imagetest);
+        imageUpload = findViewById(R.id.image_upload);
         tv = findViewById(R.id.textView2);
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
 
-//        startEvent.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (eventName.length() != 0 && !city.equals("null")){
-//                    event = new Event(eventName.getText().toString(),city,"image");
-//                    eventLinkedList.add(event);
-//
-//                    Intent intent = new Intent(NewEvent.this,EventActivity.class);
-//                    startActivity(intent);
-//
-//                }
-//
-//            }
-//        });
-
         startEvent.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (eventName.length() != 0 && !city.equals("null")){
+                    event = new Event(eventName.getText().toString(),city,"image");
+                    eventLinkedList.add(event);
+
+                    Intent intent = new Intent(NewEvent.this,EventActivity.class);
+                    startActivity(intent);
+
+                }
+
+            }
+        });
+
+        imageUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 Intent intent = new Intent();
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
-
                 startActivityForResult(Intent.createChooser(intent,"select image "),REQUEST_CODE);
             }
         });
@@ -126,9 +126,9 @@ public class NewEvent extends AppCompatActivity {
 
             Uri uri = data.getData();
             try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(),uri);
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(),uri);
 
-            imageTest.setImageBitmap(bitmap);
+            imageUpload.setImageBitmap(bitmap);
             } catch (IOException e) {
 
                 e.printStackTrace();
