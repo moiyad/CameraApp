@@ -1,8 +1,10 @@
-package com.example.pc.cameraapp;
+package com.example.pc.cameraapp.models;
 
 import android.graphics.Bitmap;
 
-public class Event {
+import io.realm.RealmObject;
+
+public class Event extends RealmObject{
 
     String Name;
     String location;
@@ -12,6 +14,9 @@ public class Event {
         Name = name;
         this.location = location;
         this.image = image;
+    }
+
+    public Event() {
     }
 
     public String getName() {

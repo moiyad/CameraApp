@@ -24,24 +24,29 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.pc.cameraapp.models.Event;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import io.realm.Realm;
+import io.realm.RealmResults;
+
 public class NewEvent extends AppCompatActivity {
 
-    EditText eventName;
-    Button startEvent;
-    ImageView locationImage, imageUpload;
-    TextView locationText, tv;
-    LinkedList<Event> eventLinkedList = new LinkedList<Event>();
+    private EditText eventName;
+    private Button startEvent;
+    private ImageView locationImage, imageUpload;
+    private TextView locationText, tv;
     private LocationManager locationManager;
     private LocationListener listener;
-    Event event ;
     private int REQUEST_CODE = 1;
-    int i ;
-    String city;
-    Bitmap bitmap;
+    private Realm realm;
+    private String city;
+    private Bitmap bitmap;
 
 
 
@@ -51,29 +56,33 @@ public class NewEvent extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_new_event);
 
-         i = 0;
-         city ="null";
+        realm = Realm.getDefaultInstance();
+
         eventName = findViewById(R.id.event_name);
         startEvent = findViewById(R.id.start_event_B);
         locationImage = findViewById(R.id.location_image);
         locationText = findViewById(R.id.location_text);
         imageUpload = findViewById(R.id.image_upload);
-        tv = findViewById(R.id.textView2);
+
+        city ="null";
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
 
         startEvent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (eventName.length() != 0 && !city.equals("null")){
-                    event = new Event(eventName.getText().toString(),city,"image");
-                    eventLinkedList.add(event);
+                if (eventName.length() != 0 && !city.equals("null")) {
 
-                    Intent intent = new Intent(NewEvent.this,EventActivity.class);
+                    if (bitmap != null) {
+                        writeInDB(eventName.getText().toString(), city, String.valueOf(bitmap));
+
+                    }else{
+                        writeInDB(eventName.getText().toString(), city, null);
+                    }
+                    Intent intent = new Intent(NewEvent.this, EventActivity.class);
                     startActivity(intent);
-
                 }
-
             }
         });
 
@@ -92,10 +101,7 @@ public class NewEvent extends AppCompatActivity {
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-
                 location_name(location);
-                i++;
-                Log.d("NewEvent", "onLocationChanged: "+i);
             }
 
             @Override
@@ -144,10 +150,10 @@ public class NewEvent extends AppCompatActivity {
                     configure_button();
                     break;
                 default:
-                    Log.d("newEvent", "default: ");
                     break;
             }
         }
+
 
 
     private void configure_button() {
@@ -173,12 +179,42 @@ public class NewEvent extends AppCompatActivity {
             List<Address> addresses = null ;
             addresses = geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1 );
              city =  addresses.get(0).getCountryName()+" - "+addresses.get(0).getLocality();
-            Log.d("newEvent", "location_name: country :  city : "+city);
             locationText.setText("place: "+city);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void writeInDB(final String name , final String location , final String bitmap ){
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm bgRealm) {
+                Event e = bgRealm.createObject(Event.class);
+                e.setName(name);
+                e.setLocation(location);
+                e.setImage(bitmap);
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                Log.d("moiyad", "onSuccess: Write ");
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                // Transaction failed and was automatically canceled.
+                Log.d("moiyad", "onError: Write "+ error);
+            }
+        });
+
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        realm.close();
     }
 }
 
