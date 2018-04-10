@@ -11,20 +11,25 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.example.pc.cameraapp.models.Event;
+
 import java.io.File;
 import java.util.LinkedList;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class EventActivity extends AppCompatActivity {
     public static final int REQUEST_CAPTURE = 1;
     public static final int REQUEST_RECORD = 100;
 
-    LinkedList<String> stringLinkedList = new LinkedList<String>();
 
+    Realm realm;
 
     Button imageB, videoB;
     EditText eventName;
     private int imageCounter = 0, videoCounter = 0;
-    Intent intent;
+
 
 
     @Override
@@ -35,7 +40,10 @@ public class EventActivity extends AppCompatActivity {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
 
+        realm  = Realm.getDefaultInstance();
 
+        RealmResults<Event> result = realm.where(Event.class).findAll();
+        Log.d("moiyad", "execute: "+result.size());
 
         imageB = findViewById(R.id.take_picture);
         videoB = findViewById(R.id.take_video);
@@ -92,8 +100,37 @@ public class EventActivity extends AppCompatActivity {
             fileUrl = Uri.fromFile(video);
             videoCounter++;
         }
-        Log.d("moiyad", "onClick: folder " + fileUrl);
 
         return fileUrl;
+    }
+
+    public void deleteFromDB(final int i) {
+        realm.executeTransactionAsync(new Realm.Transaction() {
+            @Override
+            public void execute(Realm realm) {
+                RealmResults<Event> result = realm.where(Event.class).findAll();
+                Log.d("moiyad", "execute: "+result.size());
+
+                if (i == 0)
+                    result.deleteAllFromRealm();
+                else {
+                    Event e = result.get(i);
+                    e.deleteFromRealm();
+                }
+            }
+        }, new Realm.Transaction.OnSuccess() {
+            @Override
+            public void onSuccess() {
+                Log.d("moiyad", "onSuccess: Delete ");
+            }
+        }, new Realm.Transaction.OnError() {
+            @Override
+            public void onError(Throwable error) {
+                // Transaction failed and was automatically canceled.
+                Log.d("moiyad", "onError: Delete " + error);
+            }
+        });
+
+
     }
 }
