@@ -6,6 +6,8 @@ import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -25,9 +27,10 @@ public class EventActivity extends AppCompatActivity {
 
 
     Realm realm;
-
+    RecyclerView recyclerView;
     Button imageB, videoB;
     EditText eventName;
+    RealmResults<Event> result ;
     private int imageCounter = 0, videoCounter = 0;
 
 
@@ -40,14 +43,15 @@ public class EventActivity extends AppCompatActivity {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
 
-        realm  = Realm.getDefaultInstance();
 
-        RealmResults<Event> result = realm.where(Event.class).findAll();
-        Log.d("moiyad", "execute: "+result.size());
+
 
         imageB = findViewById(R.id.take_picture);
         videoB = findViewById(R.id.take_video);
         eventName = findViewById(R.id.editText);
+
+        Intent intent = getIntent();
+        eventName.setText(intent.getExtras().getString("Event Name"));
 
 
 
@@ -58,6 +62,8 @@ public class EventActivity extends AppCompatActivity {
                 intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
                 startActivityForResult(intent, REQUEST_RECORD);
                 intent.putExtra(MediaStore.EXTRA_OUTPUT, filePath(eventName.getText().toString(), false));
+
+                Log.d("moiyad", "onClick: vid");
 
 
             }
@@ -70,6 +76,7 @@ public class EventActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 startActivityForResult(intent, REQUEST_CAPTURE);
+                Log.d("moiyad", "onClick: img");
 
             }
         });
@@ -77,6 +84,7 @@ public class EventActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("moiyad", "onActivityResult: ");
         data.putExtra(MediaStore.EXTRA_OUTPUT, filePath(eventName.getText().toString(), true));
 
     }
@@ -92,12 +100,14 @@ public class EventActivity extends AppCompatActivity {
             folder.mkdir();
         }
         if (type) {
-            File image = new File(folder, event + "_image_" + imageCounter + ".jpg");
+            File image = new File(folder, event + "image.jpg");
             fileUrl = Uri.fromFile(image);
+            Log.d("moiyad", "filePath: "+fileUrl);
             imageCounter++;
         } else {
-            File video = new File(folder, "videos_" + videoCounter + ".mp4");
+            File video = new File(folder, "videos.mp4");
             fileUrl = Uri.fromFile(video);
+            Log.d("moiyad", "filePath: "+fileUrl);
             videoCounter++;
         }
 
@@ -133,4 +143,6 @@ public class EventActivity extends AppCompatActivity {
 
 
     }
+
+
 }

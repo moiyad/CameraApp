@@ -1,6 +1,7 @@
 package com.example.pc.cameraapp;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,6 +19,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,6 +30,7 @@ import android.widget.Toast;
 
 import com.example.pc.cameraapp.models.Event;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -72,15 +75,15 @@ public class NewEvent extends AppCompatActivity {
         startEvent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (eventName.length() != 0 && !city.equals("null")) {
+                if (eventName.length() != 0 ) {
 
                     if (bitmap != null) {
-                        writeInDB(eventName.getText().toString(), city, String.valueOf(bitmap));
+                        writeInDB(eventName.getText().toString(), city, bitmap);
 
                     }else{
                         writeInDB(eventName.getText().toString(), city, null);
                     }
-                    Intent intent = new Intent(NewEvent.this, EventActivity.class);
+                    Intent intent = new Intent(NewEvent.this, MainActivity.class);
                     startActivity(intent);
                 }
             }
@@ -94,14 +97,15 @@ public class NewEvent extends AppCompatActivity {
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent,"select image "),REQUEST_CODE);
+
             }
         });
-
 
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
                 location_name(location);
+                Log.d("location", "onLocationChanged: ");
             }
 
             @Override
@@ -118,16 +122,17 @@ public class NewEvent extends AppCompatActivity {
             public void onProviderDisabled(String provider) {
                 Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(i);
+                Log.d("location", "onProviderDisabled: "+provider);
+
             }
         };
-
 
         configure_button();
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        Log.d("location", "onActivityResult: ");
         if(data != null && data.getData()!= null){
 
             Uri uri = data.getData();
@@ -147,6 +152,7 @@ public class NewEvent extends AppCompatActivity {
         public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
             switch (requestCode){
                 case 10:
+                    Log.d("location", "onRequestPermissionsResult: ");
                     configure_button();
                     break;
                 default:
@@ -159,16 +165,23 @@ public class NewEvent extends AppCompatActivity {
     private void configure_button() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Log.d("location", "configure_button: ");
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.INTERNET}
                         ,10);
             }
+            Log.d("location", "configure_button: Return ");
+
             return;
         }
+        Log.d("location", "configure_button: out ");
+
+
         locationImage.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("MissingPermission")
             @Override
             public void onClick(View v) {
                 locationManager.requestLocationUpdates("gps", 0, 10000, listener);
-
+                Log.d("location", "onClick: ");
             }
         });
     }
@@ -186,14 +199,15 @@ public class NewEvent extends AppCompatActivity {
         }
     }
 
-    public void writeInDB(final String name , final String location , final String bitmap ){
+    public void writeInDB(final String name , final String location , final Bitmap bitmap ){
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm bgRealm) {
                 Event e = bgRealm.createObject(Event.class);
                 e.setName(name);
                 e.setLocation(location);
-                e.setImage(bitmap);
+                e.setImage(bitMapToString(bitmap));
+
             }
         }, new Realm.Transaction.OnSuccess() {
             @Override
@@ -209,6 +223,15 @@ public class NewEvent extends AppCompatActivity {
         });
 
     }
+    public String bitMapToString(Bitmap bitmap){
+        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
+        byte [] b=baos.toByteArray();
+        String temp= Base64.encodeToString(b, Base64.DEFAULT);
+        return temp;
+    }
+
+
 
 
     @Override
